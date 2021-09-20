@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -17,11 +18,8 @@ namespace TryingHttp
         //}
         static async Task Main()
         {
-            Console.WriteLine("Welcome to vk links getter v 1.0.0.");
-            Console.WriteLine("Dedicated to myself.");
-            Console.WriteLine("To exit press Ctrl + C.");
-            Console.WriteLine("To continue press Enter.");
-            Console.Read();
+            Console.WriteLine("\nWelcome to vk links getter v 1.0.0.\n");
+            Console.WriteLine("\nTo exit press Ctrl + C.\n");
 
             List<string> links = new List<string>();
 
@@ -46,13 +44,18 @@ namespace TryingHttp
             }
             string[] linksToTxt = links.ToArray();
             File.WriteAllLines(path + "/links.txt", linksToTxt);
+
+            Console.WriteLine("Success! Press enter to... exit...");
+            Console.WriteLine("\nWas coded by lord_extraneous (c) 2021.\n");
             Console.Read();
+            System.Environment.Exit(0);
         }
         static void CheckIfWrongCreds(JObject JSON)
         {
             if (JSON["error"] is Object)
             {
                 Console.WriteLine(JSON["error"]["error_msg"]);
+                Console.Read();
                 System.Environment.Exit(0);
             }
         }
@@ -81,11 +84,13 @@ namespace TryingHttp
 
         static string GetPath()
         {
-            string response = "";
-            while (response == "")
+            string response = GetUserString("Type the path for the txt to be saved. Example: 'C:/Users/Admin/Desktop'.");
+
+            while (!Regex.IsMatch(response, @"^[A-Z]:"))
             {
-                response = GetUserResponse("Type the path for the txt to be saved. Example: 'C:/Users/Admin/Desktop'.");
+                response = GetUserString("I guess you typed wrong path. Try again. Example: 'C:/Users/Admin/Desktop'.");
             }
+
 
             return response;
         }
@@ -94,15 +99,35 @@ namespace TryingHttp
             string response = "";
             while (response == "")
             {
-                string ownerID = GetUserResponse("Paste in owner_id.");
-                string albumID = GetUserResponse("Paste in album_id.");
-                string accessToken = GetUserResponse("Paste in access_token.");
-                response = $"https://api.vk.com/method/photos.get?owner_id={ownerID}&album_id={albumID}&count=10&access_token={accessToken}&v=5.130";
+                Console.WriteLine("\nYou may get help here:  https://vk.com/dev/photos.get \n");
+                string ownerID = GetUserString("Paste in owner_id.");
+                string albumID = GetUserString("Paste in album_id.");
+                string accessToken = GetUserString("Paste in access_token.");
+                string linksNumber = GetUserInt("Type the number of links you need. (Must be between 1 and 1000)");
+
+                response = $"https://api.vk.com/method/photos.get?owner_id={ownerID}&album_id={albumID}&count={linksNumber}&access_token={accessToken}&v=5.130";
             }
 
             return response;
         }
-        static string GetUserResponse(string whatToAsk)
+        static string GetUserInt(string whatToAsk)
+        {
+            string response = GetUserString(whatToAsk);
+            string resultString = Regex.Match(response, @"\d+").Value;
+
+            while (resultString == "")
+            {
+                string askedAgain = GetUserString($"You typed {response}. There was no numbers. Try again.");
+                resultString = Regex.Match(askedAgain, @"\d+").Value;
+            }
+
+
+            int linksCount = Int32.Parse(resultString);
+            if (linksCount < 1) resultString = "0";
+            if (linksCount > 1000) resultString = "1000";
+            return resultString;
+        }
+        static string GetUserString(string whatToAsk)
         {
             string response = "";
             while (response == "")
@@ -112,5 +137,6 @@ namespace TryingHttp
             }
             return response;
         }
+
     }
 }
