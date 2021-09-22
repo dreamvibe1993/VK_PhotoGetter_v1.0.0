@@ -18,8 +18,9 @@ namespace TryingHttp
         //}
         static async Task Main()
         {
-            Console.WriteLine("\nWelcome to vk links getter v 1.0.0.\n");
+            Console.WriteLine("\n***Welcome to vk links getter v 1.0.0.***\n");
             Console.WriteLine("\nTo exit press Ctrl + C.\n");
+            Console.WriteLine("For better experience you may need to turn off your antivirus.");
 
             List<string> links = new List<string>();
 
@@ -103,22 +104,38 @@ namespace TryingHttp
                 string ownerID = GetUserString("Paste in owner_id.");
                 string albumID = GetUserString("Paste in album_id.");
                 string accessToken = GetUserString("Paste in access_token.");
-                string linksNumber = GetUserInt("Type the number of links you need. (Must be between 1 and 1000)");
 
-                response = $"https://api.vk.com/method/photos.get?owner_id={ownerID}&album_id={albumID}&count={linksNumber}&access_token={accessToken}&v=5.130";
+                string chronology = GetUserInt("Starting with old ones or new ones? For oldest type 0, for newest type 1.", "oldNew");
+                string linksNumber = GetUserInt("Type the number of links you need. (Must be between 1 and 1000)", "");
+
+    
+
+                response = $"https://api.vk.com/method/photos.get?owner_id={ownerID}&album_id={albumID}&count={linksNumber}&access_token={accessToken}&rev={chronology}&v=5.130";
             }
 
             return response;
         }
-        static string GetUserInt(string whatToAsk)
+
+        static string GetUserInt(string whatToAsk, string flag)
         {
             string response = GetUserString(whatToAsk);
-            string resultString = Regex.Match(response, @"\d+").Value;
+            string regex = flag == "oldNew" ? @"^[01]$" : @"\d+";
+
+            string resultString = Regex.Match(response, regex).Value;
 
             while (resultString == "")
             {
-                string askedAgain = GetUserString($"You typed {response}. There was no numbers. Try again.");
-                resultString = Regex.Match(askedAgain, @"\d+").Value;
+                string errMessage = "Error!";
+                if (flag == "oldNew")
+                {
+                    errMessage = $"Seems you didn't get it. I need either 1 or 0! You typed {response}.";
+                }
+                else
+                {
+                    errMessage = $"You typed {response}. There was no numbers. Try again.";
+                }
+                string askedAgain = GetUserString(errMessage);
+                resultString = Regex.Match(askedAgain, regex).Value;
             }
 
 
@@ -127,6 +144,24 @@ namespace TryingHttp
             if (linksCount > 1000) resultString = "1000";
             return resultString;
         }
+
+        //static string GetUserInt(string whatToAsk)
+        //{
+        //    string response = GetUserString(whatToAsk);
+        //    string resultString = Regex.Match(response, @"\d+").Value;
+
+        //    while (resultString == "")
+        //    {
+        //        string askedAgain = GetUserString($"You typed {response}. There was no numbers. Try again.");
+        //        resultString = Regex.Match(askedAgain, @"\d+").Value;
+        //    }
+
+
+        //    int linksCount = Int32.Parse(resultString);
+        //    if (linksCount < 1) resultString = "0";
+        //    if (linksCount > 1000) resultString = "1000";
+        //    return resultString;
+        //}
         static string GetUserString(string whatToAsk)
         {
             string response = "";
